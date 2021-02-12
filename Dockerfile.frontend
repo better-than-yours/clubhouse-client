@@ -1,0 +1,15 @@
+FROM node:alpine as build-frontend
+
+ARG VERSION
+
+COPY frontend /srv/frontend
+RUN apk add --update python make g++ && \
+    rm -rf /var/cache/apk/*
+RUN cd /srv/frontend && \
+    npm ci && \
+    npm run build
+
+FROM nginx:alpine
+
+COPY --from=build-frontend /srv/frontend/app /usr/share/nginx/html
+EXPOSE 80
