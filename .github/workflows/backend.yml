@@ -79,7 +79,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [lint, build]
-    if: false # template
     steps:
       - uses: actions/checkout@v2
       - name: Setup SSH key
@@ -100,8 +99,8 @@ jobs:
           ssh-keyscan ${{ secrets.DIGITALOCEAN_CLUSTER_IP }} >> $HOME/.ssh/known_hosts
           doctl compute ssh ${{ secrets.DIGITALOCEAN_CLUSTER_NAME }} --ssh-command " \
             echo ${{ secrets.DOCKER_TOKEN }} | docker login ghcr.io -u $DOCKER_USER --password-stdin
-            docker-compose -f infra/services/template-go-react/docker-compose.yml pull; \
-            docker-compose -f infra/services/template-go-react/docker-compose.yml up -d api; \
+            docker-compose -f infra/services/clubhouse-client/docker-compose.yml pull; \
+            docker-compose -f infra/services/clubhouse-client/docker-compose.yml up -d api; \
           "
 
 

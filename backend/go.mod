@@ -1,4 +1,4 @@
-module github.com/better-than-yours/template-go-react
+module github.com/better-than-yours/clubhouse-client
 
 go 1.15
 
