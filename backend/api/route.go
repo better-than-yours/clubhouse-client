@@ -18,6 +18,14 @@ func renderSuccess(w http.ResponseWriter, r *http.Request, response interface{})
 	render.JSON(w, r, response)
 }
 
+func setCredentials(data *GetChannelsRequest) {
+	var credentials = map[string]string{
+		"CH-UserID":     data.UserID,
+		"Authorization": fmt.Sprintf(`Bearer %s`, data.Authorization),
+	}
+	clubhouseapi.AddCredentials(credentials)
+}
+
 // StartPhoneNumberAuthRequest is the request structure of the StartPhoneNumberAuth method
 type StartPhoneNumberAuthRequest struct {
 	PhoneNumber string `json:"phone_number"`
@@ -69,11 +77,7 @@ func (s *Server) getChannels(w http.ResponseWriter, r *http.Request) {
 		renderInternalServerError(w, r)
 		return
 	}
-	var credentials = map[string]string{
-		"CH-UserID":     data.UserID,
-		"Authorization": fmt.Sprintf(`Bearer %s`, data.Authorization),
-	}
-	clubhouseapi.AddCredentials(credentials)
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
 	response, err := clubhouseapi.GetChannels()
 	if err != nil {
 		renderInternalServerError(w, r)
@@ -94,11 +98,7 @@ func (s *Server) joinChannel(w http.ResponseWriter, r *http.Request) {
 		renderInternalServerError(w, r)
 		return
 	}
-	var credentials = map[string]string{
-		"CH-UserID":     data.UserID,
-		"Authorization": fmt.Sprintf(`Bearer %s`, data.Authorization),
-	}
-	clubhouseapi.AddCredentials(credentials)
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
 	response, err := clubhouseapi.JoinChannel(data.Channel)
 	if err != nil {
 		renderInternalServerError(w, r)
@@ -109,6 +109,7 @@ func (s *Server) joinChannel(w http.ResponseWriter, r *http.Request) {
 
 // RefreshTokenRequest is the request structure of the RefreshToken method
 type RefreshTokenRequest struct {
+	GetChannelsRequest
 	Refresh string `json:"refresh"`
 }
 
@@ -118,6 +119,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 		renderInternalServerError(w, r)
 		return
 	}
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
 	response, err := clubhouseapi.RefreshToken(data.Refresh)
 	if err != nil {
 		renderInternalServerError(w, r)
