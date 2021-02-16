@@ -3,11 +3,11 @@ import { FormControl, InputLabel, Input, Grid, Button } from '@material-ui/core'
 import { ILogin, IUser } from './interface';
 import { doStartPhoneNumberAuth, doCompletePhoneNumberAuth } from './request';
 
-interface Params {
+interface Props {
   onUpdateUser: (user: IUser) => void;
 }
 
-export function Login({ onUpdateUser: onSetUser }: Params) {
+export function Login({ onUpdateUser }: Props) {
   const [login, setLogin] = useState<ILogin>({
     phone_number: '',
   });
@@ -18,9 +18,8 @@ export function Login({ onUpdateUser: onSetUser }: Params) {
         phone_number: login.phone_number,
         verification_code: login.verification_code,
       });
-      onSetUser({
-        access_token: response.access_token,
-        refresh_token: response.refresh_token,
+      onUpdateUser({
+        token: response.auth_token,
         user_profile: response.user_profile,
       });
     } else {

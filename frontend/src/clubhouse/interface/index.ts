@@ -4,8 +4,7 @@ export interface ILogin {
 }
 
 export interface IUser {
-  access_token: string;
-  refresh_token: string;
+  token: string;
   user_profile: {
     user_id: number;
     name: string;

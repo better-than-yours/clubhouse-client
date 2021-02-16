@@ -29,7 +29,6 @@ func (s *Server) Run(port int) {
 		r.Post("/complete_phone_number_auth", s.completePhoneNumberAuth)
 		r.Post("/get_channels", s.getChannels)
 		r.Post("/join_channel", s.joinChannel)
-		r.Post("/refresh_token", s.refreshToken)
 	})
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),

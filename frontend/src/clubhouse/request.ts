@@ -2,7 +2,6 @@ import {
   IStartPhoneNumberAuthResponse,
   ICompletePhoneNumberAuthResponse,
   IGetChannelsResponse,
-  IRefreshTokenResponse,
   IJoinChannelResponse,
 } from './interface/request';
 
@@ -26,7 +25,7 @@ export async function doCompletePhoneNumberAuth(data: { phone_number: string; ve
   return response.json() as Promise<ICompletePhoneNumberAuthResponse>;
 }
 
-export async function doGetChannels(data: { user_id: string; authorization: string }) {
+export async function doGetChannels(data: { user_id: string; token: string }) {
   const requestOptions = {
     method: 'POST',
     body: JSON.stringify(data),
@@ -35,20 +34,11 @@ export async function doGetChannels(data: { user_id: string; authorization: stri
   return response.json() as Promise<IGetChannelsResponse>;
 }
 
-export async function doJoinChannel(data: { user_id: string; authorization: string; channel: string }) {
+export async function doJoinChannel(data: { user_id: string; token: string; channel: string }) {
   const requestOptions = {
     method: 'POST',
     body: JSON.stringify(data),
   };
   const response = await fetch(`${URL}/join_channel`, requestOptions);
   return response.json() as Promise<IJoinChannelResponse>;
-}
-
-export async function doRefreshToken(data: { refresh: string }) {
-  const requestOptions = {
-    method: 'POST',
-    body: JSON.stringify(data),
-  };
-  const response = await fetch(`${URL}/refresh_token`, requestOptions);
-  return response.json() as Promise<IRefreshTokenResponse>;
 }

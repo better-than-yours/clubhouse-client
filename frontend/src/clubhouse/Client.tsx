@@ -38,7 +38,7 @@ export function Client() {
   return (
     <>
       {!user && <Login onUpdateUser={handleSetUser} />}
-      {user && <ChannelList user={user} onUpdateUser={handleSetUser} />}
+      {user && <ChannelList user={user} />}
     </>
   );
 }

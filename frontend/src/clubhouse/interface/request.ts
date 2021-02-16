@@ -21,11 +21,6 @@ export interface ICompletePhoneNumberAuthResponse {
   is_onboarding: boolean;
 }
 
-export interface IRefreshTokenResponse {
-  access: string;
-  refresh: string;
-}
-
 export interface IChannel {
   creator_user_profile_id: number;
   channel_id: number;

@@ -21,7 +21,7 @@ func renderSuccess(w http.ResponseWriter, r *http.Request, response interface{})
 func setCredentials(data *GetChannelsRequest) {
 	var credentials = map[string]string{
 		"CH-UserID":     data.UserID,
-		"Authorization": fmt.Sprintf(`Bearer %s`, data.Authorization),
+		"Authorization": fmt.Sprintf(`Token %s`, data.Token),
 	}
 	clubhouseapi.AddCredentials(credentials)
 }
@@ -67,8 +67,8 @@ func (s *Server) completePhoneNumberAuth(w http.ResponseWriter, r *http.Request)
 
 // GetChannelsRequest is the request structure of the GetChannels method
 type GetChannelsRequest struct {
-	UserID        string `json:"user_id"`
-	Authorization string `json:"authorization"`
+	UserID string `json:"user_id"`
+	Token  string `json:"token"`
 }
 
 func (s *Server) getChannels(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func (s *Server) getChannels(w http.ResponseWriter, r *http.Request) {
 		renderInternalServerError(w, r)
 		return
 	}
-	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.GetChannels()
 	if err != nil {
 		renderInternalServerError(w, r)
@@ -98,29 +98,8 @@ func (s *Server) joinChannel(w http.ResponseWriter, r *http.Request) {
 		renderInternalServerError(w, r)
 		return
 	}
-	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.JoinChannel(data.Channel)
-	if err != nil {
-		renderInternalServerError(w, r)
-		return
-	}
-	renderSuccess(w, r, response)
-}
-
-// RefreshTokenRequest is the request structure of the RefreshToken method
-type RefreshTokenRequest struct {
-	GetChannelsRequest
-	Refresh string `json:"refresh"`
-}
-
-func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
-	data := &RefreshTokenRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r)
-		return
-	}
-	setCredentials(&GetChannelsRequest{UserID: data.UserID, Authorization: data.Authorization})
-	response, err := clubhouseapi.RefreshToken(data.Refresh)
 	if err != nil {
 		renderInternalServerError(w, r)
 		return

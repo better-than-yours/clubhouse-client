@@ -2,44 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Grid } from '@material-ui/core';
 import { IUser } from './interface';
 import { IChannel } from './interface/request';
-import { doGetChannels, doRefreshToken, doJoinChannel } from './request';
+import { doGetChannels, doJoinChannel } from './request';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import agoraRtcSdk from 'agora-rtc-sdk';
 
-interface Params {
+interface Props {
   user: IUser;
-  onUpdateUser: (user: IUser) => void;
 }
 
-export function ChannelList({ user, onUpdateUser }: Params) {
+export function ChannelList({ user }: Props) {
   const [loading, isLoading] = useState(true);
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
-    if (user) {
+    if (user && loading) {
       loadChannels().then(() => isLoading(false));
     }
   }, []);
 
   async function loadChannels() {
-    try {
-      const response = await doGetChannels({
-        user_id: String(user.user_profile.user_id),
-        authorization: user.access_token,
-      });
-      setChannels(response.Channels);
-    } catch {
-      const response = await doRefreshToken({ refresh: user.refresh_token });
-      onUpdateUser({ ...user, access_token: response.access, refresh_token: response.refresh });
-    }
+    const response = await doGetChannels({
+      user_id: String(user.user_profile.user_id),
+      token: user.token,
+    });
+    setChannels(response.Channels);
   }
 
   async function handleClickListItem(channel: IChannel) {
     const response = await doJoinChannel({
       user_id: String(user.user_profile.user_id),
-      authorization: user.access_token,
+      token: user.token,
       channel: channel.channel,
     });
     const client = agoraRtcSdk.createClient({ mode: 'live', codec: 'h264' });
