@@ -20,6 +20,7 @@ func renderSuccess(w http.ResponseWriter, r *http.Request, response interface{})
 
 func setCredentials(data *GetChannelsRequest) {
 	var credentials = map[string]string{
+		"CH-DeviceId":   "b5c07613-faeb-4bc6-901f-bce7516cb344",
 		"CH-UserID":     data.UserID,
 		"Authorization": fmt.Sprintf(`Token %s`, data.Token),
 	}
