@@ -2,13 +2,15 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/render"
 	"github.com/lafin/clubhouseapi"
 )
 
-func renderInternalServerError(w http.ResponseWriter, r *http.Request) {
+func renderInternalServerError(w http.ResponseWriter, r *http.Request, err error) {
+	log.Println(err)
 	render.Status(r, http.StatusInternalServerError)
 	render.PlainText(w, r, "InternalServerError")
 }
@@ -35,12 +37,12 @@ type StartPhoneNumberAuthRequest struct {
 func (s *Server) startPhoneNumberAuth(w http.ResponseWriter, r *http.Request) {
 	data := &StartPhoneNumberAuthRequest{}
 	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	response, err := clubhouseapi.StartPhoneNumberAuth(data.PhoneNumber)
 	if err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	renderSuccess(w, r, response)
@@ -55,12 +57,12 @@ type CompletePhoneNumberAuthRequest struct {
 func (s *Server) completePhoneNumberAuth(w http.ResponseWriter, r *http.Request) {
 	data := &CompletePhoneNumberAuthRequest{}
 	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	response, err := clubhouseapi.CompletePhoneNumberAuth(data.PhoneNumber, data.VerificationCode)
 	if err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	renderSuccess(w, r, response)
@@ -75,13 +77,13 @@ type GetChannelsRequest struct {
 func (s *Server) getChannels(w http.ResponseWriter, r *http.Request) {
 	data := &GetChannelsRequest{}
 	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.GetChannels()
 	if err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	renderSuccess(w, r, response)
@@ -96,13 +98,13 @@ type JoinChannelRequest struct {
 func (s *Server) joinChannel(w http.ResponseWriter, r *http.Request) {
 	data := &JoinChannelRequest{}
 	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.JoinChannel(data.Channel)
 	if err != nil {
-		renderInternalServerError(w, r)
+		renderInternalServerError(w, r, err)
 		return
 	}
 	renderSuccess(w, r, response)
