@@ -54,6 +54,7 @@ export function ChannelList({ user }: Props) {
   }
 
   async function handleClickListItem(channel: IChannel) {
+    leaveChannel();
     const response = await doJoinChannel({
       user_id: String(user.user_profile.user_id),
       token: user.token,
@@ -73,10 +74,16 @@ export function ChannelList({ user }: Props) {
     });
   }
 
-  async function leaveCall(e: React.MouseEvent) {
+  function handleClickLeave(e: React.MouseEvent) {
     e.stopPropagation();
-    await selectedChannel?.client.leave();
-    setSelectedChannel(undefined);
+    leaveChannel();
+  }
+
+  async function leaveChannel() {
+    if (selectedChannel) {
+      await selectedChannel.client.leave();
+      setSelectedChannel(undefined);
+    }
   }
 
   if (loading) {
@@ -114,7 +121,7 @@ export function ChannelList({ user }: Props) {
                   </Grid>
                   <Grid item xs={1}>
                     {selectedChannel?.channelId === channel.channel_id && (
-                      <IconButton onClick={(e) => leaveCall(e)}>
+                      <IconButton onClick={handleClickLeave}>
                         <ExitToAppIcon fontSize="inherit" />
                       </IconButton>
                     )}
