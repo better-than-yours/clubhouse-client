@@ -1,12 +1,14 @@
 import Avatar from '@material-ui/core/Avatar';
 import Divider from '@material-ui/core/Divider';
 import Grid from '@material-ui/core/Grid';
+import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import AgoraRTC from 'agora-rtc-sdk';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import AgoraRTC, { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { IUser } from './interface';
@@ -30,12 +32,15 @@ const useStyles = makeStyles((theme) => ({
 export function ChannelList({ user }: Props) {
   const classes = useStyles();
   const [loading, isLoading] = useState(true);
-  const [selectedChannel, setSelectedChannel] = useState<number>();
+  const [selectedChannel, setSelectedChannel] = useState<{
+    channelId: number;
+    client: IAgoraRTCClient;
+  }>();
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
     if (user && loading) {
-      AgoraRTC.Logger.setLogLevel(2);
+      AgoraRTC.setLogLevel(3);
       loadChannels().then(() => isLoading(false));
     }
   }, []);
@@ -48,92 +53,30 @@ export function ChannelList({ user }: Props) {
     setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
   }
 
-  function appendTo(id: string, toId: string) {
-    const el = document.createElement('div');
-    el.setAttribute('id', id);
-    document.getElementById(toId)?.appendChild(el);
-  }
-
-  function addView(id: string) {
-    if (!document.getElementById(`#${id}`)) {
-      appendTo(`remote_video_panel_${id}`, 'video');
-      appendTo(`remote_video_${id}`, `remote_video_panel_${id}`);
-    }
-  }
-
-  function removeView(id: string) {
-    if (document.getElementById(`remote_video_panel_${id}`)) {
-      document.getElementById(`remote_video_panel_${id}`)?.remove();
-    }
-  }
-
   async function handleClickListItem(channel: IChannel) {
     const response = await doJoinChannel({
       user_id: String(user.user_profile.user_id),
       token: user.token,
       channel: channel.channel,
     });
-    setSelectedChannel(channel.channel_id);
 
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
-    let streamID: any;
-    let remoteStreams: any[] = [];
+    setSelectedChannel({ channelId: channel.channel_id, client });
+    await client.join('938de3e8055e42b281bb8c6f69c21f78', channel.channel, response.token, user.user_profile.user_id);
 
-    client.on('error', (err) => {
-      console.log(err);
-    });
-    client.on('peer-leave', (evt) => {
-      const id = evt.uid;
-      const streams = remoteStreams.filter((e) => id !== e.getId());
-      const peerStream = remoteStreams.find((e) => id === e.getId());
-      peerStream && peerStream.stop();
-      remoteStreams = streams;
-      if (id !== streamID) {
-        removeView(id);
+    client.on('user-published', async (user, mediaType) => {
+      await client.subscribe(user, mediaType);
+      if (mediaType === 'audio') {
+        const remoteAudioTrack = user.audioTrack;
+        remoteAudioTrack?.play();
       }
-      console.log('peer-leave', id);
     });
-    client.on('stream-published', () => {
-      console.log('stream-published');
-    });
-    client.on('stream-added', (evt) => {
-      const remoteStream = evt.stream;
-      const id = remoteStream.getId();
-      if (id !== streamID) {
-        client.subscribe(remoteStream, { video: false, audio: true }, (err: any) => {
-          console.log('stream subscribe failed', err);
-        });
-      }
-      console.log(`stream-added remote-uid: ${id}`);
-    });
-    client.on('stream-subscribed', (evt) => {
-      const remoteStream = evt.stream;
-      const id = remoteStream.getId();
-      remoteStreams.push(remoteStream);
-      addView(id);
-      remoteStream.play(`remote_video_${id}`, { fit: 'cover' });
-      console.log('stream-subscribed remote-uid: ', id);
-    });
-    client.on('stream-removed', (evt) => {
-      const remoteStream = evt.stream;
-      const id = remoteStream.getId();
-      remoteStream.stop();
-      remoteStreams = remoteStreams.filter((stream) => stream.getId() !== id);
-      removeView(id);
-      console.log('stream-removed remote-uid: ', id);
-    });
-    client.on('onTokenPrivilegeWillExpire', () => {
-      console.log('onTokenPrivilegeWillExpire');
-    });
-    client.on('onTokenPrivilegeDidExpire', () => {
-      console.log('onTokenPrivilegeDidExpire');
-    });
-    client.init('938de3e8055e42b281bb8c6f69c21f78', () => {
-      client.join(response.token, channel.channel, user.user_profile.user_id, undefined, (uid: any) => {
-        streamID = uid;
-        console.log(`join channel: ${channel.channel} success, uid: ${uid}`);
-      });
-    });
+  }
+
+  async function leaveCall(e: React.MouseEvent) {
+    e.stopPropagation();
+    await selectedChannel?.client.leave();
+    setSelectedChannel(undefined);
   }
 
   if (loading) {
@@ -141,22 +84,19 @@ export function ChannelList({ user }: Props) {
   }
 
   return (
-    <>
-      <div id="video" />
-      <Grid item>
-        {channels && (
-          <List dense={true}>
-            {channels.map((channel) => (
-              <Fragment key={`channel-${channel.channel_id}`}>
-                <ListItem
-                  selected={selectedChannel === channel.channel_id}
-                  onClick={() => handleClickListItem(channel)}
-                  button
-                >
-                  <Grid item>
-                    <Grid item>
-                      <ListItemText primary={`${channel.topic} ${channel.num_all}`} />
-                    </Grid>
+    <Grid item>
+      {channels && (
+        <List dense={true}>
+          {channels.map((channel) => (
+            <Fragment key={`channel-${channel.channel_id}`}>
+              <ListItem
+                selected={selectedChannel?.channelId === channel.channel_id}
+                onClick={() => handleClickListItem(channel)}
+                button
+              >
+                <Grid container direction="row">
+                  <Grid item xs={11}>
+                    <ListItemText primary={`${channel.topic} ${channel.num_all}`} />
                     <Grid container spacing={1}>
                       {channel.users
                         .filter((user) => user.is_speaker || user.is_moderator)
@@ -172,13 +112,20 @@ export function ChannelList({ user }: Props) {
                         ))}
                     </Grid>
                   </Grid>
-                </ListItem>
-                <Divider component="li" />
-              </Fragment>
-            ))}
-          </List>
-        )}
-      </Grid>
-    </>
+                  <Grid item xs={1}>
+                    {selectedChannel?.channelId === channel.channel_id && (
+                      <IconButton onClick={(e) => leaveCall(e)}>
+                        <ExitToAppIcon fontSize="inherit" />
+                      </IconButton>
+                    )}
+                  </Grid>
+                </Grid>
+              </ListItem>
+              <Divider component="li" />
+            </Fragment>
+          ))}
+        </List>
+      )}
+    </Grid>
   );
 }
