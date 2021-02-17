@@ -3,9 +3,13 @@ on:
   push:
     branches:
       - master
+    paths:
+      - frontend/**
   pull_request:
     branches:
       - master
+    paths:
+      - frontend/**
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -54,4 +58,3 @@ jobs:
             docker-compose -f infra/services/clubhouse-client/docker-compose.yml pull; \
             docker-compose -f infra/services/clubhouse-client/docker-compose.yml up -d web; \
           "
-
