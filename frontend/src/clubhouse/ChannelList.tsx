@@ -1,19 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Grid } from '@material-ui/core';
+import Avatar from '@material-ui/core/Avatar';
+import Divider from '@material-ui/core/Divider';
+import Grid from '@material-ui/core/Grid';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import ListItemText from '@material-ui/core/ListItemText';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import AgoraRTC from 'agora-rtc-sdk';
+import React, { Fragment, useEffect, useState } from 'react';
+
 import { IUser } from './interface';
 import { IChannel } from './interface/request';
 import { doGetChannels, doJoinChannel } from './request';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import AgoraRTC from 'agora-rtc-sdk';
 
 interface Props {
   user: IUser;
 }
 
+const useStyles = makeStyles((theme) => ({
+  avatar: {
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+  },
+  listItemAvatar: {
+    minWidth: theme.spacing(3) + 5,
+  },
+}));
+
 export function ChannelList({ user }: Props) {
+  const classes = useStyles();
   const [loading, isLoading] = useState(true);
+  const [selectedChannel, setSelectedChannel] = useState<number>();
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
@@ -28,7 +45,7 @@ export function ChannelList({ user }: Props) {
       user_id: String(user.user_profile.user_id),
       token: user.token,
     });
-    setChannels(response.Channels);
+    setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
   }
 
   function appendTo(id: string, toId: string) {
@@ -56,6 +73,7 @@ export function ChannelList({ user }: Props) {
       token: user.token,
       channel: channel.channel,
     });
+    setSelectedChannel(channel.channel_id);
 
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
     let streamID: any;
@@ -127,14 +145,36 @@ export function ChannelList({ user }: Props) {
       <div id="video" />
       <Grid item>
         {channels && (
-          <List>
+          <List dense={true}>
             {channels.map((channel) => (
-              <ListItem key={`channel-${channel.channel_id}`} onClick={() => handleClickListItem(channel)}>
-                <ListItemText
-                  primary={`${channel.topic} ${channel.num_all}`}
-                  secondary={channel.users.map((user) => user.name).join(', ')}
-                />
-              </ListItem>
+              <Fragment key={`channel-${channel.channel_id}`}>
+                <ListItem
+                  selected={selectedChannel === channel.channel_id}
+                  onClick={() => handleClickListItem(channel)}
+                  button
+                >
+                  <Grid item>
+                    <Grid item>
+                      <ListItemText primary={`${channel.topic} ${channel.num_all}`} />
+                    </Grid>
+                    <Grid container spacing={1}>
+                      {channel.users
+                        .filter((user) => user.is_speaker || user.is_moderator)
+                        .map((user) => (
+                          <Grid item key={`channel-speaker-${user.user_id}`}>
+                            <Grid container direction="row">
+                              <ListItemAvatar className={classes.listItemAvatar}>
+                                <Avatar alt={user.name} src={user.photo_url} className={classes.avatar} />
+                              </ListItemAvatar>
+                              <ListItemText>{user.name}</ListItemText>
+                            </Grid>
+                          </Grid>
+                        ))}
+                    </Grid>
+                  </Grid>
+                </ListItem>
+                <Divider component="li" />
+              </Fragment>
             ))}
           </List>
         )}

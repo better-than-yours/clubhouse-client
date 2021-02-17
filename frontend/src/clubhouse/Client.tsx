@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Login } from './Login';
+import React, { useEffect, useState } from 'react';
+
 import { ChannelList } from './ChannelList';
 import { IUser } from './interface';
+import { Login } from './Login';
 
 export function Client() {
   const [user, setUser] = useState<IUser>();

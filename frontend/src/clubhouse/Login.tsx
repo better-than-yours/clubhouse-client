@@ -1,7 +1,12 @@
+import Button from '@material-ui/core/Button';
+import FormControl from '@material-ui/core/FormControl';
+import Grid from '@material-ui/core/Grid';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
 import React, { useState } from 'react';
-import { FormControl, InputLabel, Input, Grid, Button } from '@material-ui/core';
+
 import { ILogin, IUser } from './interface';
-import { doStartPhoneNumberAuth, doCompletePhoneNumberAuth } from './request';
+import { doCompletePhoneNumberAuth, doStartPhoneNumberAuth } from './request';
 
 interface Props {
   onUpdateUser: (user: IUser) => void;

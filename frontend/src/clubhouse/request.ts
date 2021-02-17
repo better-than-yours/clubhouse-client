@@ -1,8 +1,8 @@
 import {
-  IStartPhoneNumberAuthResponse,
   ICompletePhoneNumberAuthResponse,
   IGetChannelsResponse,
   IJoinChannelResponse,
+  IStartPhoneNumberAuthResponse,
 } from './interface/request';
 
 const URL = 'https://chapp.link/api/clubhouse';

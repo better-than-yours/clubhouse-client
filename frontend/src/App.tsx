@@ -1,5 +1,6 @@
-import React from 'react';
 import { Grid } from '@material-ui/core';
+import React from 'react';
+
 import { Client } from './clubhouse/Client';
 
 function App() {
