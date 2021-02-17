@@ -2,6 +2,7 @@ import {
   ICompletePhoneNumberAuthResponse,
   IGetChannelsResponse,
   IJoinChannelResponse,
+  ILeaveChannelResponse,
   IStartPhoneNumberAuthResponse,
 } from './interface/request';
 
@@ -41,4 +42,13 @@ export async function doJoinChannel(data: { user_id: string; token: string; chan
   };
   const response = await fetch(`${URL}/join_channel`, requestOptions);
   return response.json() as Promise<IJoinChannelResponse>;
+}
+
+export async function doLeaveChannel(data: { user_id: string; token: string; channel: string }) {
+  const requestOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${URL}/leave_channel`, requestOptions);
+  return response.json() as Promise<ILeaveChannelResponse>;
 }

@@ -13,10 +13,16 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import { IUser } from './interface';
 import { IChannel } from './interface/request';
-import { doGetChannels, doJoinChannel } from './request';
+import { doGetChannels, doJoinChannel, doLeaveChannel } from './request';
 
 interface Props {
   user: IUser;
+}
+
+interface SelectedChannel {
+  channelId: number;
+  channel: string;
+  client: IAgoraRTCClient;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -32,10 +38,7 @@ const useStyles = makeStyles((theme) => ({
 export function ChannelList({ user }: Props) {
   const classes = useStyles();
   const [loading, isLoading] = useState(true);
-  const [selectedChannel, setSelectedChannel] = useState<{
-    channelId: number;
-    client: IAgoraRTCClient;
-  }>();
+  const [selectedChannel, setSelectedChannel] = useState<SelectedChannel>();
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export function ChannelList({ user }: Props) {
     });
 
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
-    setSelectedChannel({ channelId: channel.channel_id, client });
+    setSelectedChannel({ channelId: channel.channel_id, channel: channel.channel, client });
     await client.join('938de3e8055e42b281bb8c6f69c21f78', channel.channel, response.token, user.user_profile.user_id);
 
     client.on('user-published', async (user, mediaType) => {
@@ -81,7 +84,13 @@ export function ChannelList({ user }: Props) {
 
   async function leaveChannel() {
     if (selectedChannel) {
-      await selectedChannel.client.leave();
+      const { client, channel } = selectedChannel;
+      await client.leave();
+      await doLeaveChannel({
+        user_id: String(user.user_profile.user_id),
+        token: user.token,
+        channel,
+      });
       setSelectedChannel(undefined);
     }
   }

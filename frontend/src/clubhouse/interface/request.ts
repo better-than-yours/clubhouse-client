@@ -162,3 +162,7 @@ export interface IJoinChannelResponse {
   pubnub_enable: boolean;
   agora_native_mute: boolean;
 }
+
+export interface ILeaveChannelResponse {
+  success: boolean;
+}
