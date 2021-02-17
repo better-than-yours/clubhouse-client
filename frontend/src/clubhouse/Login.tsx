@@ -16,19 +16,23 @@ export function Login({ onUpdateUser }: Props) {
   const [login, setLogin] = useState<ILogin>({
     phone_number: '',
   });
+  const [requestedCode, setRequestedCode] = useState(false);
 
   async function handleSubmit() {
-    if (login.verification_code) {
-      const response = await doCompletePhoneNumberAuth({
-        phone_number: login.phone_number,
-        verification_code: login.verification_code,
-      });
-      onUpdateUser({
-        token: response.auth_token,
-        user_profile: response.user_profile,
-      });
+    if (requestedCode) {
+      if (login.verification_code) {
+        const response = await doCompletePhoneNumberAuth({
+          phone_number: login.phone_number,
+          verification_code: login.verification_code,
+        });
+        onUpdateUser({
+          token: response.auth_token,
+          user_profile: response.user_profile,
+        });
+      }
     } else {
       await doStartPhoneNumberAuth({ phone_number: login.phone_number });
+      setRequestedCode(true);
     }
   }
 
@@ -37,13 +41,14 @@ export function Login({ onUpdateUser }: Props) {
   }
 
   return (
-    <Grid item xs={3}>
-      <Grid container spacing={1} direction="column">
+    <Grid container spacing={1} alignItems="center" justify="center" direction="row" style={{ minHeight: '100vh' }}>
+      {!requestedCode && (
         <Grid item>
           <FormControl fullWidth={true}>
-            <InputLabel htmlFor="phone-number-input">Phone number</InputLabel>
+            <InputLabel htmlFor="phone-number-input">Enter your phone #</InputLabel>
             <Input
               id="phone-number-input"
+              placeholder="+12345678900"
               onChange={(event) =>
                 handleChangeLogin({
                   phone_number: event.target.value,
@@ -52,11 +57,14 @@ export function Login({ onUpdateUser }: Props) {
             />
           </FormControl>
         </Grid>
+      )}
+      {requestedCode && (
         <Grid item>
           <FormControl fullWidth={true}>
-            <InputLabel htmlFor="verification-code-input">Verification code</InputLabel>
+            <InputLabel htmlFor="verification-code-input">Enter the code</InputLabel>
             <Input
               id="verification-code-input"
+              placeholder="1234"
               onChange={(event) =>
                 handleChangeLogin({
                   verification_code: event.target.value,
@@ -65,13 +73,13 @@ export function Login({ onUpdateUser }: Props) {
             />
           </FormControl>
         </Grid>
-        <Grid item>
-          <FormControl>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
-              Login
-            </Button>
-          </FormControl>
-        </Grid>
+      )}
+      <Grid item>
+        <FormControl>
+          <Button variant="outlined" color="primary" onClick={handleSubmit}>
+            Next
+          </Button>
+        </FormControl>
       </Grid>
     </Grid>
   );

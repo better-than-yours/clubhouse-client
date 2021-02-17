@@ -5,8 +5,8 @@ import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import ListItemText from '@material-ui/core/ListItemText';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import AgoraRTC, { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -32,6 +32,15 @@ const useStyles = makeStyles((theme) => ({
   },
   listItemAvatar: {
     minWidth: theme.spacing(3) + 5,
+  },
+  leave: {
+    width: '48px',
+  },
+  gutters: {
+    padding: 5,
+  },
+  row: {
+    flex: 1,
   },
 }));
 
@@ -96,7 +105,11 @@ export function ChannelList({ user }: Props) {
   }
 
   if (loading) {
-    return <>Loading...</>;
+    return (
+      <Grid container alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
+        Loading...
+      </Grid>
+    );
   }
 
   return (
@@ -109,11 +122,21 @@ export function ChannelList({ user }: Props) {
                 selected={selectedChannel?.channelId === channel.channel_id}
                 onClick={() => handleClickListItem(channel)}
                 button
+                className={classes.gutters}
               >
                 <Grid container direction="row">
-                  <Grid item xs={11}>
-                    <ListItemText primary={`${channel.topic} ${channel.num_all}`} />
-                    <Grid container spacing={1}>
+                  <Grid item className={classes.row}>
+                    {channel.topic && (
+                      <Grid container spacing={1} direction="row" alignItems="center">
+                        <Grid item>
+                          <Typography variant="body1">{channel.topic}</Typography>
+                        </Grid>
+                        <Grid item>
+                          <Typography variant="caption">{channel.num_all}</Typography>
+                        </Grid>
+                      </Grid>
+                    )}
+                    <Grid container spacing={1} alignItems="center">
                       {channel.users
                         .filter((user) => user.is_speaker || user.is_moderator)
                         .map((user) => (
@@ -122,15 +145,16 @@ export function ChannelList({ user }: Props) {
                               <ListItemAvatar className={classes.listItemAvatar}>
                                 <Avatar alt={user.name} src={user.photo_url} className={classes.avatar} />
                               </ListItemAvatar>
-                              <ListItemText>{user.name}</ListItemText>
+                              <Typography variant="body2">{user.name}</Typography>
                             </Grid>
                           </Grid>
                         ))}
+                      {!channel.topic && <Typography variant="caption">{channel.num_all}</Typography>}
                     </Grid>
                   </Grid>
-                  <Grid item xs={1}>
+                  <Grid item className={classes.leave}>
                     {selectedChannel?.channelId === channel.channel_id && (
-                      <IconButton onClick={handleClickLeave}>
+                      <IconButton color="secondary" onClick={handleClickLeave}>
                         <ExitToAppIcon fontSize="inherit" />
                       </IconButton>
                     )}

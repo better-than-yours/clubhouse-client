@@ -1,3 +1,4 @@
+import Grid from '@material-ui/core/Grid';
 import React, { useEffect, useState } from 'react';
 
 import { ChannelList } from './ChannelList';
@@ -33,7 +34,11 @@ export function Client() {
   }
 
   if (loading) {
-    return <>Loading...</>;
+    return (
+      <Grid container alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
+        Loading...
+      </Grid>
+    );
   }
 
   return (
