@@ -2,6 +2,7 @@ import Grid from '@material-ui/core/Grid';
 import React, { useEffect, useState } from 'react';
 
 import { ChannelList } from './ChannelList';
+import { HowItWorks } from './HowItWorks';
 import { IUser } from './interface';
 import { Login } from './Login';
 import { Title } from './Title';
@@ -9,6 +10,7 @@ import { Title } from './Title';
 export function Client() {
   const [user, setUser] = useState<IUser>();
   const [loading, isLoading] = useState(true);
+  const [openHowItWorks, isHowItWorks] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -34,6 +36,11 @@ export function Client() {
     setUser(user);
   }
 
+  function handleLogout() {
+    localStorage.removeItem('clubhouse');
+    setUser(undefined);
+  }
+
   if (loading) {
     return (
       <Grid container alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
@@ -44,9 +51,10 @@ export function Client() {
 
   return (
     <>
-      <Title />
+      <Title user={user} onClickHowItWorks={() => isHowItWorks(true)} onLogout={handleLogout} />
       {!user && <Login onUpdateUser={handleSetUser} />}
       {user && <ChannelList user={user} />}
+      <HowItWorks open={openHowItWorks} onClose={() => isHowItWorks(false)} />
     </>
   );
 }
