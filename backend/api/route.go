@@ -130,3 +130,24 @@ func (s *Server) leaveChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	renderSuccess(w, r, response)
 }
+
+// ActivePingRequest is the request structure of the ActivePing method
+type ActivePingRequest struct {
+	GetChannelsRequest
+	Channel string `json:"channel"`
+}
+
+func (s *Server) activePing(w http.ResponseWriter, r *http.Request) {
+	data := &ActivePingRequest{}
+	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
+	response, err := clubhouseapi.ActivePing(data.Channel)
+	if err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	renderSuccess(w, r, response)
+}

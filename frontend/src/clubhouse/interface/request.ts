@@ -166,3 +166,8 @@ export interface IJoinChannelResponse {
 export interface ILeaveChannelResponse {
   success: boolean;
 }
+
+export interface IActivePingResponse {
+  should_leave: boolean;
+  success: boolean;
+}

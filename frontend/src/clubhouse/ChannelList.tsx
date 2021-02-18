@@ -13,7 +13,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import { IUser } from './interface';
 import { IChannel } from './interface/request';
-import { doGetChannels, doJoinChannel, doLeaveChannel } from './request';
+import { doActivePing, doGetChannels, doJoinChannel, doLeaveChannel } from './request';
 
 interface Props {
   user: IUser;
@@ -47,12 +47,13 @@ const useStyles = makeStyles((theme) => ({
 export function ChannelList({ user }: Props) {
   const classes = useStyles();
   const [loading, isLoading] = useState(true);
-  const [selectedChannel, setSelectedChannel] = useState<SelectedChannel>();
+  const [selectedChannels, setSelectedChannels] = useState<{ [key: string]: SelectedChannel }>({});
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
     const id = setInterval(() => {
       loadChannels();
+      activePing();
     }, 20e3);
     return () => clearInterval(id);
   }, []);
@@ -74,8 +75,17 @@ export function ChannelList({ user }: Props) {
     }
   }
 
+  async function activePing() {
+    for (const channel of Object.keys(selectedChannels)) {
+      doActivePing({
+        user_id: String(user.user_profile.user_id),
+        token: user.token,
+        channel,
+      });
+    }
+  }
+
   async function handleClickListItem(channel: IChannel) {
-    leaveChannel();
     const response = await doJoinChannel({
       user_id: String(user.user_profile.user_id),
       token: user.token,
@@ -83,9 +93,11 @@ export function ChannelList({ user }: Props) {
     });
 
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
-    setSelectedChannel({ channelId: channel.channel_id, channel: channel.channel, client });
+    setSelectedChannels({
+      ...selectedChannels,
+      [channel.channel]: { channelId: channel.channel_id, channel: channel.channel, client },
+    });
     await client.join('938de3e8055e42b281bb8c6f69c21f78', channel.channel, response.token, user.user_profile.user_id);
-
     client.on('user-published', async (user, mediaType) => {
       await client.subscribe(user, mediaType);
       if (mediaType === 'audio') {
@@ -95,15 +107,18 @@ export function ChannelList({ user }: Props) {
     });
   }
 
-  function handleClickLeave(e: React.MouseEvent) {
+  function handleClickLeave(e: React.MouseEvent, channelId: string) {
     e.stopPropagation();
-    leaveChannel();
-    setSelectedChannel(undefined);
+    leaveChannel(channelId);
+    if (selectedChannels[channelId]) {
+      delete selectedChannels[channelId];
+    }
+    setSelectedChannels({ ...selectedChannels });
   }
 
-  async function leaveChannel() {
-    if (selectedChannel) {
-      const { client, channel } = selectedChannel;
+  async function leaveChannel(channelId: string) {
+    if (selectedChannels) {
+      const { client, channel } = selectedChannels[channelId];
       await client.leave();
       await doLeaveChannel({
         user_id: String(user.user_profile.user_id),
@@ -128,7 +143,7 @@ export function ChannelList({ user }: Props) {
           {channels.map((channel) => (
             <Fragment key={`channel-${channel.channel_id}`}>
               <ListItem
-                selected={selectedChannel?.channelId === channel.channel_id}
+                selected={Boolean(selectedChannels[channel.channel])}
                 onClick={() => handleClickListItem(channel)}
                 button
                 className={classes.gutters}
@@ -161,9 +176,9 @@ export function ChannelList({ user }: Props) {
                       {!channel.topic && <Typography variant="caption">{channel.num_all}</Typography>}
                     </Grid>
                   </Grid>
-                  {selectedChannel?.channelId === channel.channel_id && (
+                  {Boolean(selectedChannels[channel.channel]) && (
                     <Grid item className={classes.leave}>
-                      <IconButton color="secondary" onClick={handleClickLeave}>
+                      <IconButton color="secondary" onClick={(e) => handleClickLeave(e, channel.channel)}>
                         <ExitToAppIcon fontSize="inherit" />
                       </IconButton>
                     </Grid>

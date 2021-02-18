@@ -1,4 +1,5 @@
 import {
+  IActivePingResponse,
   ICompletePhoneNumberAuthResponse,
   IGetChannelsResponse,
   IJoinChannelResponse,
@@ -51,4 +52,13 @@ export async function doLeaveChannel(data: { user_id: string; token: string; cha
   };
   const response = await fetch(`${URL}/leave_channel`, requestOptions);
   return response.json() as Promise<ILeaveChannelResponse>;
+}
+
+export async function doActivePing(data: { user_id: string; token: string; channel: string }) {
+  const requestOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${URL}/active_ping`, requestOptions);
+  return response.json() as Promise<IActivePingResponse>;
 }

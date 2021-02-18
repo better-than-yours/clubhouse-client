@@ -30,6 +30,7 @@ func (s *Server) Run(port int) {
 		r.Post("/get_channels", s.getChannels)
 		r.Post("/join_channel", s.joinChannel)
 		r.Post("/leave_channel", s.leaveChannel)
+		r.Post("/active_ping", s.activePing)
 	})
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
