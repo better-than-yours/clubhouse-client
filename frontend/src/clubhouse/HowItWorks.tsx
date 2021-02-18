@@ -19,12 +19,12 @@ export function HowItWorks({ open, onClose }: Props) {
           Hello,
           <br />
           <br />
-          Why? First of all. The clubhouse is a great app. Unfortunately, the web app doesn't exist yet. I have
-          reimplemented iOS app functionality where you can log in and listen to a channel. For me, this is 95% of all
-          functionality which I use daily. Why not just use the mobile app? Because the mobile application very quickly
-          discharges my AirPods, even when I'm not talking on the channel. And I want to be in several rooms at the same
-          time. In the future, the functionality may increase if the Clubhouse doesn't close the opportunity to use
-          their functionality. I have a lot of ideas. Be in touch.
+          Why? First of all. The Clubhouse is a great app. Unfortunately, the web app doesn't exist yet. I have
+          reimplemented ios app functionality where you can log in and listen to a channel. For me, this is 95% of all
+          functionality which I use daily. Why not just use the ios app? Because the ios app very quickly discharges my
+          airpods, even when I don't speak on a channel. And I want to be in several channels at the same time. In the
+          future, the functionality may increase if the Clubhouse doesn't close the opportunity to use their
+          functionality. I have a lot of ideas. Be in touch.
           <br />
           <br />
           Email: <Link href="mailto:chapp.link@protonmail.com">chapp.link@protonmail.com</Link>
