@@ -51,12 +51,14 @@ export function ChannelList({ user }: Props) {
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
-    const id = setInterval(() => {
-      loadChannels();
-      activePing();
-    }, 20e3);
+    const id = setInterval(() => loadChannels(), 20e3);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => activePing(), 20e3);
+    return () => clearInterval(id);
+  }, [selectedChannels]);
 
   useEffect(() => {
     if (loading) {
@@ -117,7 +119,7 @@ export function ChannelList({ user }: Props) {
   }
 
   async function leaveChannel(channelId: string) {
-    if (selectedChannels) {
+    if (selectedChannels[channelId]) {
       const { client, channel } = selectedChannels[channelId];
       await client.leave();
       await doLeaveChannel({
