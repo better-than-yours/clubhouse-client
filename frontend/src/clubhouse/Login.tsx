@@ -3,6 +3,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Grid from '@material-ui/core/Grid';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Alert from '@material-ui/lab/Alert';
 import React, { useState } from 'react';
 
@@ -13,7 +14,17 @@ interface Props {
   onUpdateUser: (user: IUser) => void;
 }
 
+const useStyles = makeStyles(() => ({
+  alert: {
+    padding: 0,
+  },
+  body: {
+    padding: '25px 0 0 0',
+  },
+}));
+
 export function Login({ onUpdateUser }: Props) {
+  const classes = useStyles();
   const [login, setLogin] = useState<ILogin>({
     phone_number: '',
   });
@@ -42,11 +53,21 @@ export function Login({ onUpdateUser }: Props) {
   }
 
   return (
-    <Grid container spacing={5} alignItems="center" justify="center" direction="column" style={{ minHeight: '100vh' }}>
+    <Grid container spacing={1} alignItems="center" direction="column" className={classes.body}>
       <Grid item>
-        <Alert variant="outlined" severity="info">
-          We don't store your personal data on our servers!
-        </Alert>
+        <Grid container spacing={1} direction="column">
+          <Grid item className={classes.alert}>
+            <Alert variant="outlined" severity="info">
+              We don't store your personal data on our servers!
+            </Alert>
+          </Grid>
+          <Grid item className={classes.alert}>
+            <Alert variant="outlined" severity="warning">
+              NB. This is an <strong>unofficial</strong> Clubhouse application and this means your account may be
+              blocked by Clubhouse
+            </Alert>
+          </Grid>
+        </Grid>
       </Grid>
       <Grid item>
         <Grid container spacing={1} direction="row">
