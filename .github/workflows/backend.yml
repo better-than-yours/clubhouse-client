@@ -5,11 +5,15 @@ on:
       - master
     paths:
       - backend/**
+      - .github/workflows/backend.yml
+      - Dockerfile.backend
   pull_request:
     branches:
       - master
     paths:
       - backend/**
+      - .github/workflows/backend.yml
+      - Dockerfile.backend
 jobs:
   lint:
     runs-on: ubuntu-latest

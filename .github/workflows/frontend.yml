@@ -5,11 +5,15 @@ on:
       - master
     paths:
       - frontend/**
+      - .github/workflows/frontend.yml
+      - Dockerfile.frontend
   pull_request:
     branches:
       - master
     paths:
       - frontend/**
+      - .github/workflows/frontend.yml
+      - Dockerfile.frontend
 jobs:
   build:
     runs-on: ubuntu-latest
