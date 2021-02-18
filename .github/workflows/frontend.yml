@@ -53,7 +53,7 @@ jobs:
       - name: Deploy
         run: |
           ssh-keyscan ${{ secrets.DIGITALOCEAN_CLUSTER_IP }} >> $HOME/.ssh/known_hosts
-          doctl compute ssh ${{ secrets.DIGITALOCEAN_CLUSTER_NAME }} --ssh-command " \
+          doctl compute ssh ${{ secrets.DIGITALOCEAN_CLUSTER_NAME }} --ssh-user ch --ssh-command " \
             echo ${{ secrets.DOCKER_TOKEN }} | docker login ghcr.io -u $DOCKER_USER --password-stdin
             docker-compose -f infra/services/clubhouse-client/docker-compose.yml pull; \
             docker-compose -f infra/services/clubhouse-client/docker-compose.yml up -d web; \
