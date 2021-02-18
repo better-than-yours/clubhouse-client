@@ -51,18 +51,27 @@ export function ChannelList({ user }: Props) {
   const [channels, setChannels] = useState<IChannel[]>();
 
   useEffect(() => {
-    if (user && loading) {
+    const id = setInterval(() => {
+      loadChannels();
+    }, 20e3);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (loading) {
       AgoraRTC.setLogLevel(3);
       loadChannels().then(() => isLoading(false));
     }
-  }, []);
+  }, [loading]);
 
   async function loadChannels() {
-    const response = await doGetChannels({
-      user_id: String(user.user_profile.user_id),
-      token: user.token,
-    });
-    setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
+    if (user) {
+      const response = await doGetChannels({
+        user_id: String(user.user_profile.user_id),
+        token: user.token,
+      });
+      setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
+    }
   }
 
   async function handleClickListItem(channel: IChannel) {
