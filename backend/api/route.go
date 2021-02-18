@@ -1,11 +1,14 @@
 package api
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
 	"github.com/lafin/clubhouseapi"
 )
 
@@ -21,8 +24,11 @@ func renderSuccess(w http.ResponseWriter, r *http.Request, response interface{})
 }
 
 func setCredentials(data *GetChannelsRequest) {
+	hash := sha1.Sum([]byte(data.UserID))
+	hashReader := strings.NewReader(string(hash[:]))
+	deviceID := uuid.Must(uuid.NewRandomFromReader(hashReader))
 	var credentials = map[string]string{
-		"CH-DeviceId":   "b5c07613-faeb-4bc6-901f-bce7516cb344",
+		"CH-DeviceId":   deviceID.String(),
 		"CH-UserID":     data.UserID,
 		"Authorization": fmt.Sprintf(`Token %s`, data.Token),
 	}
