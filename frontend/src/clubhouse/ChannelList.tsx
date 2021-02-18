@@ -98,6 +98,7 @@ export function ChannelList({ user }: Props) {
   function handleClickLeave(e: React.MouseEvent) {
     e.stopPropagation();
     leaveChannel();
+    setSelectedChannel(undefined);
   }
 
   async function leaveChannel() {
@@ -109,7 +110,6 @@ export function ChannelList({ user }: Props) {
         token: user.token,
         channel,
       });
-      setSelectedChannel(undefined);
     }
   }
 
