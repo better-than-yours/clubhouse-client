@@ -152,13 +152,13 @@ export function ChannelList({ user }: Props) {
                       {!channel.topic && <Typography variant="caption">{channel.num_all}</Typography>}
                     </Grid>
                   </Grid>
-                  <Grid item className={classes.leave}>
-                    {selectedChannel?.channelId === channel.channel_id && (
+                  {selectedChannel?.channelId === channel.channel_id && (
+                    <Grid item className={classes.leave}>
                       <IconButton color="secondary" onClick={handleClickLeave}>
                         <ExitToAppIcon fontSize="inherit" />
                       </IconButton>
-                    )}
-                  </Grid>
+                    </Grid>
+                  )}
                 </Grid>
               </ListItem>
               <Divider component="li" />

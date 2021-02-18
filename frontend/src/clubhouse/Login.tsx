@@ -3,6 +3,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Grid from '@material-ui/core/Grid';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
+import Alert from '@material-ui/lab/Alert';
 import React, { useState } from 'react';
 
 import { ILogin, IUser } from './interface';
@@ -41,45 +42,54 @@ export function Login({ onUpdateUser }: Props) {
   }
 
   return (
-    <Grid container spacing={1} alignItems="center" justify="center" direction="row" style={{ minHeight: '100vh' }}>
-      {!requestedCode && (
-        <Grid item>
-          <FormControl fullWidth={true}>
-            <InputLabel htmlFor="phone-number-input">Enter your phone #</InputLabel>
-            <Input
-              id="phone-number-input"
-              placeholder="+12345678900"
-              onChange={(event) =>
-                handleChangeLogin({
-                  phone_number: event.target.value,
-                })
-              }
-            />
-          </FormControl>
-        </Grid>
-      )}
-      {requestedCode && (
-        <Grid item>
-          <FormControl fullWidth={true}>
-            <InputLabel htmlFor="verification-code-input">Enter the code</InputLabel>
-            <Input
-              id="verification-code-input"
-              placeholder="1234"
-              onChange={(event) =>
-                handleChangeLogin({
-                  verification_code: event.target.value,
-                })
-              }
-            />
-          </FormControl>
-        </Grid>
-      )}
+    <Grid container spacing={5} alignItems="center" justify="center" direction="column" style={{ minHeight: '100vh' }}>
       <Grid item>
-        <FormControl>
-          <Button variant="outlined" color="primary" onClick={handleSubmit}>
-            Next
-          </Button>
-        </FormControl>
+        <Alert variant="outlined" severity="info">
+          We don't store your personal data on our servers!
+        </Alert>
+      </Grid>
+      <Grid item>
+        <Grid container spacing={1} direction="row">
+          {!requestedCode && (
+            <Grid item>
+              <FormControl fullWidth={true}>
+                <InputLabel htmlFor="phone-number-input">Enter your phone #</InputLabel>
+                <Input
+                  id="phone-number-input"
+                  placeholder="+12345678900"
+                  onChange={(event) =>
+                    handleChangeLogin({
+                      phone_number: event.target.value,
+                    })
+                  }
+                />
+              </FormControl>
+            </Grid>
+          )}
+          {requestedCode && (
+            <Grid item>
+              <FormControl fullWidth={true}>
+                <InputLabel htmlFor="verification-code-input">Enter the code</InputLabel>
+                <Input
+                  id="verification-code-input"
+                  placeholder="1234"
+                  onChange={(event) =>
+                    handleChangeLogin({
+                      verification_code: event.target.value,
+                    })
+                  }
+                />
+              </FormControl>
+            </Grid>
+          )}
+          <Grid item>
+            <FormControl>
+              <Button variant="outlined" color="primary" onClick={handleSubmit}>
+                Next
+              </Button>
+            </FormControl>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   );

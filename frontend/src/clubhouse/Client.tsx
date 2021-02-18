@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ChannelList } from './ChannelList';
 import { IUser } from './interface';
 import { Login } from './Login';
+import { Title } from './Title';
 
 export function Client() {
   const [user, setUser] = useState<IUser>();
@@ -43,6 +44,7 @@ export function Client() {
 
   return (
     <>
+      <Title />
       {!user && <Login onUpdateUser={handleSetUser} />}
       {user && <ChannelList user={user} />}
     </>
