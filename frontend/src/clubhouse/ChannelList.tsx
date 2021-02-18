@@ -9,6 +9,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import AgoraRTC, { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
+import keyBy from 'lodash/keyBy';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { IUser } from './interface';
@@ -20,8 +21,7 @@ interface Props {
 }
 
 interface SelectedChannel {
-  channelId: number;
-  channel: string;
+  channelId: string;
   client: IAgoraRTCClient;
 }
 
@@ -73,16 +73,25 @@ export function ChannelList({ user }: Props) {
         user_id: String(user.user_profile.user_id),
         token: user.token,
       });
+      const channelsByKey = keyBy(response.Channels, 'channel');
+      for (const channelId of Object.keys(selectedChannels)) {
+        if (!channelsByKey[channelId]) {
+          const { client } = selectedChannels[channelId];
+          await client.leave();
+          delete selectedChannels[channelId];
+          setSelectedChannels({ ...selectedChannels });
+        }
+      }
       setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
     }
   }
 
   async function activePing() {
-    for (const channel of Object.keys(selectedChannels)) {
+    for (const channelId of Object.keys(selectedChannels)) {
       doActivePing({
         user_id: String(user.user_profile.user_id),
         token: user.token,
-        channel,
+        channel: channelId,
       });
     }
   }
@@ -97,7 +106,7 @@ export function ChannelList({ user }: Props) {
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
     setSelectedChannels({
       ...selectedChannels,
-      [channel.channel]: { channelId: channel.channel_id, channel: channel.channel, client },
+      [channel.channel]: { channelId: channel.channel, client },
     });
     await client.join('938de3e8055e42b281bb8c6f69c21f78', channel.channel, response.token, user.user_profile.user_id);
     client.on('user-published', async (user, mediaType) => {
@@ -120,12 +129,11 @@ export function ChannelList({ user }: Props) {
 
   async function leaveChannel(channelId: string) {
     if (selectedChannels[channelId]) {
-      const { client, channel } = selectedChannels[channelId];
-      await client.leave();
+      await selectedChannels[channelId].client.leave();
       await doLeaveChannel({
         user_id: String(user.user_profile.user_id),
         token: user.token,
-        channel,
+        channel: channelId,
       });
     }
   }
@@ -143,7 +151,7 @@ export function ChannelList({ user }: Props) {
       {channels && (
         <List dense={true}>
           {channels.map((channel) => (
-            <Fragment key={`channel-${channel.channel_id}`}>
+            <Fragment key={`channel-${channel.channel}`}>
               <ListItem
                 selected={Boolean(selectedChannels[channel.channel])}
                 onClick={() => handleClickListItem(channel)}
