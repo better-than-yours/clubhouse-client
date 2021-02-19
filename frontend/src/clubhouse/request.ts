@@ -4,6 +4,7 @@ import {
   IGetChannelsResponse,
   IJoinChannelResponse,
   ILeaveChannelResponse,
+  IRaiseHandResponse,
   IStartPhoneNumberAuthResponse,
 } from './interface/request';
 
@@ -61,4 +62,13 @@ export async function doActivePing(data: { user_id: string; token: string; chann
   };
   const response = await fetch(`${URL}/active_ping`, requestOptions);
   return response.json() as Promise<IActivePingResponse>;
+}
+
+export async function doRaiseHand(data: { user_id: string; token: string; channel: string; raise_hands: boolean }) {
+  const requestOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${URL}/audience_reply`, requestOptions);
+  return response.json() as Promise<IRaiseHandResponse>;
 }

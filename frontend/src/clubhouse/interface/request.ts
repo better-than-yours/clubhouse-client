@@ -171,3 +171,7 @@ export interface IActivePingResponse {
   should_leave: boolean;
   success: boolean;
 }
+
+export interface IRaiseHandResponse {
+  success: boolean;
+}

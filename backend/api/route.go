@@ -157,3 +157,25 @@ func (s *Server) activePing(w http.ResponseWriter, r *http.Request) {
 	}
 	renderSuccess(w, r, response)
 }
+
+// AudienceReplyRequest is the request structure of the AudienceReply method
+type AudienceReplyRequest struct {
+	GetChannelsRequest
+	Channel    string `json:"channel"`
+	RaiseHands bool   `json:"raise_hands"`
+}
+
+func (s *Server) audienceReply(w http.ResponseWriter, r *http.Request) {
+	data := &AudienceReplyRequest{}
+	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
+	response, err := clubhouseapi.AudienceReply(data.Channel, data.RaiseHands)
+	if err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	renderSuccess(w, r, response)
+}
