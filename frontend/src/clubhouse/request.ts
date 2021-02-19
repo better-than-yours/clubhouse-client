@@ -1,4 +1,5 @@
 import {
+  IAcceptSpeakerInviteResponse,
   IActivePingResponse,
   ICompletePhoneNumberAuthResponse,
   IGetChannelsResponse,
@@ -71,4 +72,18 @@ export async function doRaiseHand(data: { user_id: string; token: string; channe
   };
   const response = await fetch(`${URL}/audience_reply`, requestOptions);
   return response.json() as Promise<IRaiseHandResponse>;
+}
+
+export async function doAcceptSpeakerInvite(data: {
+  user_id: string;
+  target_user_id: string;
+  token: string;
+  channel: string;
+}) {
+  const requestOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${URL}/accept_speaker_invite`, requestOptions);
+  return response.json() as Promise<IAcceptSpeakerInviteResponse>;
 }

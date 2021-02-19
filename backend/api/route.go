@@ -179,3 +179,25 @@ func (s *Server) audienceReply(w http.ResponseWriter, r *http.Request) {
 	}
 	renderSuccess(w, r, response)
 }
+
+// AcceptSpeakerInviteRequest is the request structure of the AcceptSpeakerInvite method
+type AcceptSpeakerInviteRequest struct {
+	GetChannelsRequest
+	Channel      string `json:"channel"`
+	TargetUserID int    `json:"target_user_id"`
+}
+
+func (s *Server) acceptSpeakerInvite(w http.ResponseWriter, r *http.Request) {
+	data := &AcceptSpeakerInviteRequest{}
+	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
+	response, err := clubhouseapi.AcceptSpeakerInvite(data.Channel, data.TargetUserID)
+	if err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+	renderSuccess(w, r, response)
+}

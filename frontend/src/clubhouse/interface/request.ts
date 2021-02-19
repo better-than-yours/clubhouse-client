@@ -175,3 +175,12 @@ export interface IActivePingResponse {
 export interface IRaiseHandResponse {
   success: boolean;
 }
+
+export interface IAcceptSpeakerInviteResponse {
+  token: string;
+  pubnub_token: string;
+  pubnub_origin?: any;
+  pubnub_heartbeat_value: number;
+  pubnub_heartbeat_interval: number;
+  success: boolean;
+}
