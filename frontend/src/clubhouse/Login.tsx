@@ -63,8 +63,7 @@ export function Login({ onUpdateUser }: Props) {
           </Grid>
           <Grid item className={classes.alert}>
             <Alert variant="outlined" severity="warning">
-              NB. This is an <strong>unofficial</strong> Clubhouse application and this means your account may be
-              blocked by Clubhouse
+              NB. This is an <strong>unofficial</strong> Clubhouse application
             </Alert>
           </Grid>
         </Grid>
