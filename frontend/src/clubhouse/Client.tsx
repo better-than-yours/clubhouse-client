@@ -1,7 +1,7 @@
 import Grid from '@material-ui/core/Grid';
 import React, { useEffect, useState } from 'react';
 
-import { ChannelList } from './ChannelList';
+import { ChannelList } from './channel/ChannelList';
 import { HowItWorks } from './HowItWorks';
 import { IUser } from './interface';
 import { Login } from './Login';
@@ -41,6 +41,12 @@ export function Client() {
     setUser(undefined);
   }
 
+  function handleVoiceChat() {
+    if (user) {
+      setUser({ ...user, enabled_voice_chat: !user.enabled_voice_chat });
+    }
+  }
+
   if (loading) {
     return (
       <Grid container alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
@@ -51,7 +57,12 @@ export function Client() {
 
   return (
     <>
-      <Title user={user} onClickHowItWorks={() => isHowItWorks(true)} onLogout={handleLogout} />
+      <Title
+        user={user}
+        onClickHowItWorks={() => isHowItWorks(true)}
+        onClickVoiceChat={handleVoiceChat}
+        onLogout={handleLogout}
+      />
       {!user && <Login onUpdateUser={handleSetUser} />}
       {user && <ChannelList user={user} />}
       <HowItWorks open={openHowItWorks} onClose={() => isHowItWorks(false)} />

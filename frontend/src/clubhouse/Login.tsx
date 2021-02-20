@@ -40,6 +40,7 @@ export function Login({ onUpdateUser }: Props) {
         onUpdateUser({
           token: response.auth_token,
           user_profile: response.user_profile,
+          enabled_voice_chat: true,
         });
       }
     } else {

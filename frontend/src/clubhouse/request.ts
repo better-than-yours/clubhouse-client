@@ -76,7 +76,7 @@ export async function doRaiseHand(data: { user_id: string; token: string; channe
 
 export async function doAcceptSpeakerInvite(data: {
   user_id: string;
-  target_user_id: string;
+  target_user_id: number;
   token: string;
   channel: string;
 }) {
