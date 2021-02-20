@@ -23,6 +23,13 @@ func renderSuccess(w http.ResponseWriter, r *http.Request, response interface{})
 	render.JSON(w, r, response)
 }
 
+func decodeData(w http.ResponseWriter, r *http.Request, result interface{}) {
+	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), result); err != nil {
+		renderInternalServerError(w, r, err)
+		return
+	}
+}
+
 func setCredentials(data *GetChannelsRequest) {
 	hash := sha1.Sum([]byte(data.UserID))
 	hashReader := strings.NewReader(string(hash[:]))
@@ -42,10 +49,7 @@ type StartPhoneNumberAuthRequest struct {
 
 func (s *Server) startPhoneNumberAuth(w http.ResponseWriter, r *http.Request) {
 	data := &StartPhoneNumberAuthRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	response, err := clubhouseapi.StartPhoneNumberAuth(data.PhoneNumber)
 	if err != nil {
 		renderInternalServerError(w, r, err)
@@ -62,10 +66,7 @@ type CompletePhoneNumberAuthRequest struct {
 
 func (s *Server) completePhoneNumberAuth(w http.ResponseWriter, r *http.Request) {
 	data := &CompletePhoneNumberAuthRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	response, err := clubhouseapi.CompletePhoneNumberAuth(data.PhoneNumber, data.VerificationCode)
 	if err != nil {
 		renderInternalServerError(w, r, err)
@@ -82,10 +83,7 @@ type GetChannelsRequest struct {
 
 func (s *Server) getChannels(w http.ResponseWriter, r *http.Request) {
 	data := &GetChannelsRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.GetChannels()
 	if err != nil {
@@ -103,10 +101,7 @@ type JoinChannelRequest struct {
 
 func (s *Server) joinChannel(w http.ResponseWriter, r *http.Request) {
 	data := &JoinChannelRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.JoinChannel(data.Channel)
 	if err != nil {
@@ -124,10 +119,7 @@ type LeaveChannelRequest struct {
 
 func (s *Server) leaveChannel(w http.ResponseWriter, r *http.Request) {
 	data := &LeaveChannelRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.LeaveChannel(data.Channel)
 	if err != nil {
@@ -145,10 +137,7 @@ type ActivePingRequest struct {
 
 func (s *Server) activePing(w http.ResponseWriter, r *http.Request) {
 	data := &ActivePingRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.ActivePing(data.Channel)
 	if err != nil {
@@ -167,10 +156,7 @@ type AudienceReplyRequest struct {
 
 func (s *Server) audienceReply(w http.ResponseWriter, r *http.Request) {
 	data := &AudienceReplyRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.AudienceReply(data.Channel, data.RaiseHands)
 	if err != nil {
@@ -189,10 +175,7 @@ type AcceptSpeakerInviteRequest struct {
 
 func (s *Server) acceptSpeakerInvite(w http.ResponseWriter, r *http.Request) {
 	data := &AcceptSpeakerInviteRequest{}
-	if err := render.DecodeJSON(http.MaxBytesReader(w, r.Body, bodyLimit), &data); err != nil {
-		renderInternalServerError(w, r, err)
-		return
-	}
+	decodeData(w, r, &data)
 	setCredentials(&GetChannelsRequest{UserID: data.UserID, Token: data.Token})
 	response, err := clubhouseapi.AcceptSpeakerInvite(data.Channel, data.TargetUserID)
 	if err != nil {
