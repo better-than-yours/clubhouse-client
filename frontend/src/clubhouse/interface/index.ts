@@ -1,4 +1,5 @@
 import { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
+import Pubnub from 'pubnub';
 
 export interface ILogin {
   phone_number: string;
@@ -18,6 +19,11 @@ export interface IUser {
 
 export interface ISelectedChannel {
   channelId: string;
-  client: IAgoraRTCClient;
+  agora?: IAgoraRTCClient;
+  pubnub?: Pubnub;
   isHandraiseEnabled: boolean;
+  isRaiseHand: boolean;
+  isMicActive: boolean;
+  hasInvite: boolean;
+  isAcceptInvite: boolean;
 }

@@ -8,12 +8,12 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import ExitToAppOutlined from '@material-ui/icons/ExitToAppOutlined';
-import AgoraRTC, { IBufferSourceAudioTrack, IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
-import keyBy from 'lodash/keyBy';
+import AgoraRTC, { IAgoraRTCClient, IBufferSourceAudioTrack, IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
+import PubNub from 'pubnub';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { ISelectedChannel, IUser } from '../interface';
-import { IChannel } from '../interface/request';
+import { IChannel, IJoinChannelResponse } from '../interface/request';
 import {
   doAcceptSpeakerInvite,
   doActivePing,
@@ -47,9 +47,8 @@ const useStyles = makeStyles((theme) => ({
 export function ChannelList({ user }: Props) {
   const classes = useStyles();
   const [loading, isLoading] = useState(true);
-  const [mic, isMic] = useState(false);
-  const [raiseHand, isRaiseHand] = useState(false);
   const [micDevice, setMicDevice] = useState<IMicrophoneAudioTrack>();
+  const [message, setMessage] = useState<{ action: string; channel: string }>();
   const [presetAudios, setPresetAudios] = useState<IBufferSourceAudioTrack[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<{ [key: string]: ISelectedChannel }>({});
   const [channels, setChannels] = useState<IChannel[]>();
@@ -76,6 +75,32 @@ export function ChannelList({ user }: Props) {
     controlMicAudio();
   }, [user.enabled_voice_chat, micDevice]);
 
+  useEffect(() => {
+    if (message && selectedChannels) {
+      const { action, channel } = message;
+      switch (action) {
+        case 'invite_speaker':
+        case 'uninvite_speaker':
+          if (selectedChannels[channel]) {
+            setSelectedChannels({
+              ...selectedChannels,
+              [channel]: {
+                ...selectedChannels[channel],
+                hasInvite: action === 'invite_speaker',
+                isAcceptInvite: false,
+                isRaiseHand: false,
+              },
+            });
+          }
+          break;
+        case 'remove_from_channel':
+        case 'end_channel':
+          leaveChannel(channel);
+          break;
+      }
+    }
+  }, [message]);
+
   async function controlMicAudio() {
     micDevice?.setEnabled(user.enabled_voice_chat);
     if (user.enabled_voice_chat) {
@@ -91,15 +116,14 @@ export function ChannelList({ user }: Props) {
     }
   }
 
-  useEffect(() => {
-    micDevice?.setVolume(mic ? 100 : 0);
-  }, [mic, micDevice]);
-
   async function initAgora() {
     AgoraRTC.setLogLevel(3);
     setPresetAudios([
       await AgoraRTC.createBufferSourceAudioTrack({
         source: 'audio.mp3',
+      }),
+      await AgoraRTC.createBufferSourceAudioTrack({
+        source: 'audio1.mp3',
       }),
     ]);
   }
@@ -110,15 +134,6 @@ export function ChannelList({ user }: Props) {
         user_id: String(user.user_profile.user_id),
         token: user.token,
       });
-      const channelsByKey = keyBy(response.Channels, 'channel');
-      for (const channelId of Object.keys(selectedChannels)) {
-        if (!channelsByKey[channelId]) {
-          const { client } = selectedChannels[channelId];
-          await client.leave();
-          delete selectedChannels[channelId];
-          setSelectedChannels({ ...selectedChannels });
-        }
-      }
       setChannels(response.Channels.sort((a, b) => b.num_all - a.num_all));
     }
   }
@@ -136,33 +151,76 @@ export function ChannelList({ user }: Props) {
   async function resetChatState() {
     for (const channelId of Object.keys(selectedChannels)) {
       await leaveChannel(channelId);
+      selectedChannels[channelId] = {
+        ...selectedChannels[channelId],
+        isRaiseHand: false,
+        isMicActive: false,
+        hasInvite: false,
+        isAcceptInvite: false,
+      };
     }
-    isMic(false);
-    isRaiseHand(false);
+    setSelectedChannels({ ...selectedChannels });
   }
 
-  async function joinChannel(channelId: string) {
-    const response = await doJoinChannel({
-      user_id: String(user.user_profile.user_id),
-      token: user.token,
-      channel: channelId,
-    });
-
-    const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-    setSelectedChannels({
-      ...selectedChannels,
-      [channelId]: { channelId, client, isHandraiseEnabled: response.is_handraise_enabled },
-    });
-    await client.join('938de3e8055e42b281bb8c6f69c21f78', channelId, response.token, user.user_profile.user_id);
-    client.on('user-published', async (user, mediaType) => {
-      await client.subscribe(user, mediaType);
+  async function subscribeAgora(
+    agora: IAgoraRTCClient,
+    channelId: string,
+    userId: number,
+    response: IJoinChannelResponse,
+  ) {
+    await agora.join('938de3e8055e42b281bb8c6f69c21f78', channelId, response.token, userId);
+    agora.on('user-published', async (user, mediaType) => {
+      await agora.subscribe(user, mediaType);
       if (mediaType === 'audio' && user.audioTrack) {
         user.audioTrack.play();
       }
     });
     if (micDevice) {
-      await client.publish(micDevice);
+      await agora.publish(micDevice);
     }
+  }
+
+  function subscribePubnub(pubnub: PubNub, channelId: string, userId: number) {
+    pubnub.addListener({
+      message: (data: any) => setMessage(data.message),
+    });
+    pubnub.subscribe({
+      channels: [`users.${userId}`, `channel_user.${channelId}.${userId}`, `channel_all.${channelId}`],
+    });
+  }
+
+  async function joinChannel(channelId: string) {
+    const userId = user.user_profile.user_id;
+    const response = await doJoinChannel({
+      user_id: String(userId),
+      token: user.token,
+      channel: channelId,
+    });
+    const agora = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+    subscribeAgora(agora, channelId, userId, response);
+    const pubnub = new PubNub({
+      publishKey: 'pub-c-6878d382-5ae6-4494-9099-f930f938868b',
+      subscribeKey: 'sub-c-a4abea84-9ca3-11ea-8e71-f2b83ac9263d',
+      uuid: String(userId),
+      origin: 'clubhouse.pubnub.com',
+      presenceTimeout: response.pubnub_heartbeat_interval,
+      heartbeatInterval: response.pubnub_heartbeat_interval,
+      authKey: response.pubnub_token,
+    });
+    subscribePubnub(pubnub, channelId, userId);
+    setSelectedChannels({
+      ...selectedChannels,
+      [channelId]: {
+        channelId,
+        agora,
+        pubnub: undefined,
+        isHandraiseEnabled: response.is_handraise_enabled,
+        isMicActive: false,
+        isRaiseHand: false,
+        hasInvite: false,
+        isAcceptInvite: false,
+      },
+    });
   }
 
   async function handleClickListItem(e: React.MouseEvent, channelId: string) {
@@ -177,43 +235,72 @@ export function ChannelList({ user }: Props) {
     }
   }
 
-  async function handleClickMic(e: React.MouseEvent) {
+  async function handleClickMic(e: React.MouseEvent, channelId: string) {
     e.stopPropagation();
-    isMic(!mic);
+    const { isMicActive } = selectedChannels[channelId];
+    micDevice?.setVolume(!isMicActive ? 100 : 0);
+    setSelectedChannels({
+      ...selectedChannels,
+      [channelId]: {
+        ...selectedChannels[channelId],
+        isMicActive: !isMicActive,
+      },
+    });
   }
 
   async function handleClickRaiseHand(e: React.MouseEvent, channelId: string) {
     e.stopPropagation();
+    const { isRaiseHand } = selectedChannels[channelId];
     await doRaiseHand({
       user_id: String(user.user_profile.user_id),
       token: user.token,
       channel: channelId,
-      raise_hands: !raiseHand,
+      raise_hands: !isRaiseHand,
     });
-    isRaiseHand(!raiseHand);
+    setSelectedChannels({
+      ...selectedChannels,
+      [channelId]: {
+        ...selectedChannels[channelId],
+        isRaiseHand: !isRaiseHand,
+      },
+    });
   }
 
   async function handleClickPlayPreset(e: React.MouseEvent, channelId: string) {
     e.stopPropagation();
-    const { client } = selectedChannels[channelId];
+    const { agora } = selectedChannels[channelId];
     const presetAudio = presetAudios[0];
-    await client.publish(presetAudio);
+    await agora?.publish(presetAudio);
     presetAudio.play();
     presetAudio.startProcessAudioBuffer({ cycle: 1 });
   }
 
   async function handleClickAcceptSpeaker(e: React.MouseEvent, channelId: string) {
     e.stopPropagation();
-    await doAcceptSpeakerInvite({
+    const response = await doAcceptSpeakerInvite({
       user_id: String(user.user_profile.user_id),
       token: user.token,
       channel: channelId,
       target_user_id: user.user_profile.user_id,
     });
+    if (response.success) {
+      setSelectedChannels({
+        ...selectedChannels,
+        [channelId]: {
+          ...selectedChannels[channelId],
+          isAcceptInvite: true,
+        },
+      });
+    }
   }
 
   async function leaveChannel(channelId: string) {
-    await selectedChannels[channelId].client.leave();
+    const { agora, pubnub } = selectedChannels[channelId];
+    await agora?.leave();
+    if (pubnub) {
+      await pubnub.unsubscribeAll();
+      await pubnub.stop();
+    }
     await doLeaveChannel({
       user_id: String(user.user_profile.user_id),
       token: user.token,
@@ -271,11 +358,9 @@ export function ChannelList({ user }: Props) {
                   </Grid>
                   {Boolean(selectedChannels[channel.channel]) && (
                     <Grid item>
-                      {false && user.enabled_voice_chat && (
+                      {user.enabled_voice_chat && (
                         <VoiceAction
                           channelId={channel.channel}
-                          raiseHand={raiseHand}
-                          mic={mic}
                           selectedChannels={selectedChannels}
                           onClickRaiseHand={handleClickRaiseHand}
                           onClickPlayPreset={handleClickPlayPreset}
